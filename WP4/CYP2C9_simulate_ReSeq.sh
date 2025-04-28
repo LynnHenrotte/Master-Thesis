@@ -10,7 +10,7 @@
 #SBATCH --cpus-per-task=4     # Number of CPU cores
 #SBATCH --time=3-00:00:00       # Wall time (format: d-hh:mm:ss)
 #SBATCH --mem=8gb            # Amount of memory (units: gb, mb, kb)
-#SBATCH --array=2-95
+#SBATCH --array=2-85
 export PATH="${VSC_DATA}/miniconda3/bin:${PATH}"
 
 # Set parameters and paths for VCF file preparation
