@@ -1,0 +1,55 @@
+Reads Used:           	77878	(11759578 bases)
+
+Mapping:          	13.373 seconds.
+Reads/sec:       	5823.71
+kBases/sec:      	879.38
+
+
+Pairing data:   	pct pairs	num pairs 	pct bases	   num bases
+
+mated pairs:     	 99.3015% 	    38667 	 99.3015% 	    11677434
+bad pairs:       	  0.0925% 	       36 	  0.0925% 	       10872
+insert size avg: 	  525.07
+insert 25th %:   	  444.00
+insert median:   	  514.00
+insert 75th %:   	  594.00
+insert std dev:  	  134.08
+insert mode:     	  486
+
+
+Read 1 data:      	pct reads	num reads 	pct bases	   num bases
+
+mapped:          	 99.7791% 	    38853 	 99.7791% 	     5866803
+unambiguous:     	 99.1885% 	    38623 	 99.1885% 	     5832073
+ambiguous:       	  0.5907% 	      230 	  0.5907% 	       34730
+low-Q discards:  	  0.0000% 	        0 	  0.0000% 	           0
+
+perfect best site:	 66.6709% 	    25961 	 66.6709% 	     3920111
+semiperfect site:	 66.6761% 	    25963 	 66.6761% 	     3920413
+rescued:         	  2.5450% 	      991
+
+Match Rate:      	      NA 	       NA 	 98.5947% 	     5793836
+Error Rate:      	 32.6410% 	    12682 	  1.3981% 	       82157
+Sub Rate:        	 31.1816% 	    12115 	  1.1858% 	       69681
+Del Rate:        	  1.4388% 	      559 	  0.1636% 	        9614
+Ins Rate:        	  1.4182% 	      551 	  0.0487% 	        2862
+N Rate:          	  1.0836% 	      421 	  0.0072% 	         424
+
+
+Read 2 data:      	pct reads	num reads 	pct bases	   num bases
+
+mapped:          	 99.4915% 	    38741 	 99.4915% 	     5849891
+unambiguous:     	 98.9548% 	    38532 	 98.9548% 	     5818332
+ambiguous:       	  0.5367% 	      209 	  0.5367% 	       31559
+low-Q discards:  	  0.0000% 	        0 	  0.0000% 	           0
+
+perfect best site:	 55.0990% 	    21455 	 55.0990% 	     3239705
+semiperfect site:	 55.1041% 	    21457 	 55.1041% 	     3240007
+rescued:         	  3.1742% 	     1236
+
+Match Rate:      	      NA 	       NA 	 97.4984% 	     5738310
+Error Rate:      	 44.4981% 	    17239 	  2.4958% 	      146894
+Sub Rate:        	 43.4656% 	    16839 	  1.8464% 	      108668
+Del Rate:        	  1.2390% 	      480 	  0.6058% 	       35653
+Ins Rate:        	  1.4558% 	      564 	  0.0437% 	        2573
+N Rate:          	  0.8544% 	      331 	  0.0058% 	         340
