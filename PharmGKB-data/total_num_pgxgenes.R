@@ -1,5 +1,4 @@
 library("tidyverse")
-setwd("C:/Users/lynnh/OneDrive/Bureaublad/2nd Master Stat/Master Thesis/Reading material")
 
 data <- read.delim("relationships.tsv")
 
@@ -13,10 +12,7 @@ dataGeneDrug <- data %>% filter(Entity1_type == "Gene",
 dataDrugGene <- data %>% filter(Entity1_type == "Chemical",
                                 Entity2_type == "Gene")
 
-# => same associations! (just entity 1 and 2 switched)
-
 # Only select gene-drug pairs for which the evidence supports an association
-
 dataAssociations <- dataGeneDrug %>% filter(Association == "associated")
 
 # Get unique gene names
