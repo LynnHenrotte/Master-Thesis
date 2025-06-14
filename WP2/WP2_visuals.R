@@ -12,18 +12,53 @@
 library("ggplot2")
 library("tidyverse")
 library("ggpubr")
-library("ComplexHeatmap")
 library("ComplexUpset")
 library("VennDiagram")
+library("ursaPGx")
+library("stringr")
 
 ##----------------------------------------------------------------------------##
 
 # Set working directory
 setwd("C:/Users/lynnh/OneDrive/Bureaublad/2nd Master Stat/Master Thesis/WP2")
 
+##----------------------------------------------------------------------------##
+
+# Collect all star allele definitions on PharmVar (version 6.2.3)
+
+defined_alleles <- read.csv("Defined_alleles_all.csv", sep = "\t")
+defined_alleles <- defined_alleles %>% arrange(Gene)
+genes <- defined_alleles$Gene
+
+# Initiate list
+defined_alleles_list <- list()
+
+# Gather defined star alleles in a list of lists (one per gene)
+for (gene in genes) {
+  
+  # Extract all PharmVar recognized star alleles for gene
+  data_all <- defined_alleles[defined_alleles$Gene == gene, ]$Alleles
+  
+  # Exclude [' and '] parts
+  data_all <- substr(data_all, 3, nchar(data_all) - 2) 
+  
+  # Split string to obtain individual alleles
+  alleles_all <- stringr::str_split(data_all, pattern = "', '")[[1]]
+  
+  # Add to list
+  defined_alleles_list[[ gene ]] <- alleles_all
+  
+}
+
+##----------------------------------------------------------------------------##
+
 # Load in allele coverage results
-cov_callers <- read.csv("DiplotypeCallerAlleleCoverage2.csv", sep = "\t")
-cov_databases <- read.csv("DatabaseAlleleCoverage.csv", sep = "\t")
+cov_callers <- read.csv("Diplotype_Caller_Allele_Coverage.csv", sep = "\t")
+cov_callers <- cov_callers %>% arrange(Gene)
+cov_callers$ursaPGx_Coverage <- ursaPGx_coverages
+
+cov_databases <- read.csv("Database_Allele_Coverage.csv", sep = "\t")
+cov_databases <- cov_databases %>% arrange(Gene)
 
 # Move gene names to row names
 row.names(cov_callers) <- cov_callers$Gene
@@ -69,9 +104,9 @@ p_db <- ggplot(data = data_db, aes(fill = Database, color = Database, y = Covera
   geom_text(position = position_dodge(width = 0.8), vjust = -0.5, size = 3.5,
             fontface = "bold", show.legend = FALSE) + labs(y = "Allele Coverage") +
   theme(axis.text = element_text(size = 14, face = "bold"),
-        axis.title = element_text(size = 16, face = "bold.italic"),
-        legend.text = element_text(size = 14, face = "italic"),
-        legend.title = element_text(size = 16, face = "bold.italic"),
+        axis.title = element_text(size = 18, face = "bold.italic"),
+        legend.text = element_text(size = 16, face = "italic"),
+        legend.title = element_text(size = 18, face = "bold.italic"),
         legend.position = "bottom",
         plot.title = element_text(size= 20))  +
   ggtitle("Star allele coverage of databases for different genes") +
@@ -87,23 +122,53 @@ p_db_sub <- ggplot(data = data_db_sub,
                        x = Gene, label = Labels)) +
   geom_bar(position = "dodge", stat = "identity", width = 0.7) + theme_bw() +
   scale_y_continuous(labels = scales::percent, limits = c(0,1)) +
-  geom_text(position = position_dodge(width = 0.8), vjust = -0.5, size = 3.5,
+  geom_text(position = position_dodge(width = 0.8), vjust = -0.5, size = 5.5,
             fontface = "bold", show.legend = FALSE) + labs(y = "Allele Coverage") +
   theme(axis.text = element_text(size = 14, face = "bold"),
         axis.title = element_text(size = 16, face = "bold.italic"),
-        legend.text = element_text(size = 14, face = "italic"),
+        legend.text = element_text(size = 16, face = "italic"),
         legend.title = element_text(size = 16, face = "bold.italic"),
         legend.position = "bottom",
-        plot.title = element_text(size= 20))  +
-  ggtitle("Selected star allele coverages") +
+        plot.title = element_text(size= 20, hjust = 0.5))  +
+  guides(fill = guide_legend(nrow=2)) +
+  ggtitle("Star allele coverages of PGx databases\nfor CYP2C9 and CYP2C19") +
   scale_fill_manual(values = c("royalblue2", "maroon3")) +
   scale_color_manual(values = c("royalblue4", "maroon"))
-
-p_db_sub
 
 ############################################
 ### STAR ALLELE CALLERS: ALLELE COVERAGE ###
 ############################################
+
+## ursaPGx: find star allele coverages
+
+genes <- defined_alleles$Gene
+
+ursaPGx_callable_alleles <- ursaPGx::availableHaplotypes(build = "GRCh38")
+ursaPGx_callable_alleles_list <- list()
+ursaPGx_coverages <- c()
+
+for (gene in genes) {
+  
+  # ursaPGx callable alleles for the gene
+  alleles_ursaPGx <- ursaPGx_callable_alleles[grep(gene, ursaPGx_callable_alleles)]
+  alleles_ursaPGx <- str_extract(alleles_ursaPGx, "\\*\\d+")
+  
+  # all defined alleles for the gene
+  alleles_defined <- defined_alleles_list[[ gene ]]
+  
+  # only retain ursaPGx callable alleles that are defined on PharmVar
+  alleles_ursaPGx <- intersect(alleles_ursaPGx, alleles_defined)
+  
+  # Compute coverage (+1 because the wild type is never listed)
+  ursaPGx_coverages <- c(ursaPGx_coverages, 
+                         (length(alleles_ursaPGx) + 1)/length(alleles_defined))
+  
+  # Save ursaPGx callable alleles for the gene
+  ursaPGx_callable_alleles_list[[ gene ]] <- alleles_ursaPGx
+  
+}
+
+##----------------------------------------------------------------------------##
 
 ## Prepare data
 
@@ -129,16 +194,14 @@ p_call <- ggplot(data = data_call, aes(fill = Caller, y = Coverage, x = Gene,
   geom_bar(position = "dodge", stat = "identity", width = 0.8, color = "black") + theme_bw() +
   scale_y_continuous(labels = scales::percent, limits = c(0,1)) +
   labs(y = "Allele Coverage", fill = "Star Allele Caller") +
-  theme(axis.text = element_text(size = 12, face = "bold"),
-        axis.title = element_text(size = 14, face = "bold.italic"),
-        legend.text = element_text(size = 10, face = "italic"),
-        legend.title = element_text(size = 11, face = "bold.italic"),
+  theme(axis.text = element_text(size = 14, face = "bold"),
+        axis.title = element_text(size = 16, face = "bold.italic"),
+        legend.text = element_text(size = 16, face = "italic"),
+        legend.title = element_text(size = 16, face = "bold.italic"),
         legend.position = "bottom",
-        plot.title = element_text(size= 18)) +
+        plot.title = element_text(size= 20)) +
   guides(fill = guide_legend(nrow = 1)) +
-  ggtitle("Coverage of star allele callers for different genes")
-
-p_call
+  ggtitle("Star allele coverages of six diplotype callers for different genes")
 
 ggarrange(p_db, p_call, ncol = 1, nrow = 2)
 
@@ -152,24 +215,18 @@ p_call_sub <- ggplot(data = data_call_sub,
   geom_bar(position = "dodge", stat = "identity", width = 0.8, color = "black") + theme_bw() +
   scale_y_continuous(labels = scales::percent, limits = c(0,1)) +
   labs(y = "Allele Coverage", fill = "Star Allele Caller") +
-  theme(axis.text = element_text(size = 12, face = "bold"),
-        axis.title = element_text(size = 14, face = "bold.italic"),
-        legend.text = element_text(size = 10, face = "italic"),
-        legend.title = element_text(size = 11, face = "bold.italic"),
+  geom_text(aes(color = Caller), position = position_dodge(width = 0.8), vjust = -0.5, size = 5,
+            fontface = "bold", show.legend = FALSE) +
+  theme(axis.text = element_text(size = 14, face = "bold"),
+        axis.title = element_text(size = 16, face = "bold.italic"),
+        legend.text = element_text(size = 16, face = "italic"),
+        legend.title = element_text(size = 16, face = "bold.italic"),
         legend.position = "bottom",
-        plot.title = element_text(size= 18)) +
-  guides(fill = guide_legend(nrow = 1)) +
-  ggtitle("Coverage of star allele callers for different genes")
+        plot.title = element_text(size= 20, hjust = 0.5)) +
+  guides(fill = guide_legend(nrow = 2)) +
+  ggtitle("Star allele coverages of 5 diplotype callers\nfor CYP2C9 and CYP2C19")
 
-p_call_sub
-
-# Controle voor CYP4F2 (totaal: 17):
-# PyPGx: 16 / 17
-# StellarPGx: 15 / 17
-# PharmCAT: 16 / 17
-# ursaPGx: 3 / 17
-# PAnno: 3 / 17
-# Aldy: 4 / 17
+ggarrange(p_db_sub, p_call_sub, ncol = 2)
 
 ###############################
 ### DATABASES: VENN DIAGRAM ###
@@ -179,15 +236,12 @@ p_call_sub
 covered_alleles <- read.csv("Covered_alleles_databases.csv", sep = "\t")
 covered_alleles$Database <- c("GeT-RM", "StarAlleleSearch")
 
-defined_alleles <- read.csv("Defined_alleles_all.csv", sep = "\t")
-
 genes <- colnames(covered_alleles)[-c(1)]
 
 databases <- covered_alleles$Database
 
 # Initiate lists
 covered_alleles_list <- list()
-defined_alleles_list <- list()
 
 # Gather callable star alleles in a list of lists (one per gene)
 for (gene in genes) {
@@ -213,8 +267,7 @@ for (gene in genes) {
       temp_list[[row]] <- alleles
       }
     }
-  
-  
+   
   # Set list item names to names of databases
   names(temp_list) <- databases
   
@@ -223,12 +276,6 @@ for (gene in genes) {
   
   # Add list for gene to overall list
   covered_alleles_list[[ gene ]] <- temp_list2
-  
-  # Extract all PharmVar recognized star alleles for gene
-  data_all <- defined_alleles[defined_alleles$Gene == gene, ]$Alleles
-  data_all <- substr(data_all, 3, nchar(data_all) - 2) # Exclude [' and '] parts
-  alleles_all <- stringr::str_split(data_all, pattern = "', '")[[1]]
-  defined_alleles_list[[ gene ]] <- alleles_all
   
 }
 
@@ -279,46 +326,110 @@ for (gene in genes) {
   }
 }
 
+################################
+### DATABASES: MEAN COVERAGE ###
+################################
+
+### First: with equal weight given to all genes
+
+apply(cov_databases, MARGIN = 2, FUN = mean)
+
+# Also compute standard deviation!
+
+apply(cov_databases, MARGIN = 2, FUN = sd)
+
+### Next: using weights given by the total number of star alleles for each gene 
+
+databases <- colnames(cov_databases)
+
+# Find total number of defined star alleles for all genes
+genes <- row.names(cov_databases)
+total_num_alleles <- c(1:length(genes))
+index <- 1
+for (gene in genes) {
+  alleles_gene <- defined_alleles_list[[ gene ]]
+  total_num_alleles[index] <- length(alleles_gene)
+  index <- index + 1
+}
+
+TotalAlleles <- data.frame("Gene" = genes, "NumAlleles" = total_num_alleles)
+
+CoverageWeightedAverageDB <- function(database, include_missing_genes = FALSE) {
+  # Compute weighted average of star allele coverage of all pharmacogenes in
+  # PharmVar (excluding DPYD) for a specific database. An option is
+  # provided to include genes that are not implemented by the caller in the
+  # calculation as well.
+  
+  # Obtain allele coverages for all genes
+  coverages <- cov_databases[, database]
+  coverage_data <- data.frame("Gene" = row.names(cov_databases),
+                              "Coverage" = coverages)
+  
+  # Add total number of alleles 
+  coverage_data <- merge(coverage_data, TotalAlleles, by = "Gene")
+  
+  # If missing genes should not be included, remove them from the data frame
+  if (!include_missing_genes) {
+    coverage_data <- coverage_data %>% dplyr::filter(Coverage > 0)
+  }
+  
+  # Compute numerator of weighted average
+  numerator <- sum(coverage_data$Coverage * coverage_data$NumAlleles)
+  
+  # Compute denominator of weighted average
+  denominator <- sum(coverage_data$NumAlleles)
+  
+  # Compute and return weighted average
+  return(numerator/denominator)
+}
+
+CoverageWeightedAverageDB("GeT.RM", include_missing_genes = TRUE)
+CoverageWeightedAverageDB("Star.allele.search", include_missing_genes = TRUE)
+
+CoverageWeightedSdDB <- function(database, include_missing_genes = FALSE) {
+  # Compute weighted standard deviation of star allele coverage of all pharmacogenes in
+  # PharmVar (excluding DPYD) for a specific database. An option is
+  # provided to include genes that are not present in the database in the
+  # calculation as well.
+  
+  # Obtain allele coverages for all genes
+  coverages <- cov_databases[, database]
+  coverage_data <- data.frame("Gene" = row.names(cov_databases),
+                              "Coverage" = coverages)
+  
+  # Add total number of alleles 
+  coverage_data <- merge(coverage_data, TotalAlleles, by = "Gene")
+  
+  # If missing genes should not be included, remove them from the data frame
+  if (!include_missing_genes) {
+    coverage_data <- coverage_data %>% dplyr::filter(Coverage > 0)
+  }
+  
+  # Compute weighted mean
+  mean_w <- CoverageWeightedAverage(database, include_missing_genes)
+  
+  # Compute squared differences between weighted mean and coverages
+  mean_w_diff <- (coverage_data$Coverage - mean_w)^2
+  coverage_data$Squared_Diff <- mean_w_diff
+  
+  # Compute numerator of weighted sd
+  numerator <- sum(coverage_data$Squared_Diff * coverage_data$NumAlleles)
+  
+  # Compute denominator of weighted sd
+  denominator <- sum(coverage_data$NumAlleles) - 1
+  
+  # Compute and return weighted sd
+  return(sqrt(numerator/denominator))
+}
+
+CoverageWeightedSdDB("GeT.RM", include_missing_genes = TRUE)
+CoverageWeightedSdDB("Star.allele.search", include_missing_genes = TRUE)
+
 ##########################################
 ### STAR ALLELE CALLERS: MEAN COVERAGE ###
 ##########################################
 
-### First: with equal weight given to all genes
-
-# Collect data
-
-callers <- c("PyPGx", "StellarPGx", "PharmCAT", "ursaPGx", "PAnno", "Aldy")
-
-mean_cov_callers_df <- data.frame("Caller" = rep(callers, times = 2),
-                                  "Mean" = c(mean_cov_callers2, mean_cov_callers),
-                                  "ZeroesIncluded" = factor(rep(c("Yes", "No"), each = length(callers)),
-                                                            levels = c("Yes", "No")))
-
-labs_mean <- scales::percent(mean_cov_callers_df$Mean, accuracy = .1)
-
-mean_cov_callers_df$Labels <- labs_mean
-
-# Create plot
-
-ggplot(data = mean_cov_callers_df, aes(fill = ZeroesIncluded, color = ZeroesIncluded,
-                                       y = Mean, x = Caller, label = Labels)) +
-  geom_bar(position = "dodge", stat = "identity", width = 0.7) + theme_bw() +
-  scale_y_continuous(labels = scales::percent, limits = c(0,1)) +
-  geom_text(show.legend = FALSE, position = position_dodge(width = 0.8), 
-            vjust = -0.5, size = 5, fontface = "bold") + 
-  labs(y = "Mean *Allele Coverage", fill = "Missing genes included", 
-       color = "Missing genes included") +
-  theme(axis.text = element_text(size = 14, face = "bold"),
-        axis.title = element_text(size = 16, face = "bold.italic"),
-        legend.text = element_text(size = 14, face = "italic"),
-        legend.title = element_text(size = 16, face = "bold.italic"),
-        legend.position = "bottom",
-        plot.title = element_text(size = 20)) +
-  ggtitle("Mean coverage for different star allele callers") +
-  scale_fill_manual(values = c("darkolivegreen3", "firebrick2")) +
-  scale_color_manual(values = c("darkolivegreen4", "firebrick4"))
-
-### Next: using weights given by the total number of star alleles for each gene 
+### Compute weights given by the total number of star alleles for each gene 
 
 callers <- c("PyPGx", "StellarPGx", "PharmCAT", "ursaPGx", "PAnno", "Aldy")
 
@@ -334,7 +445,7 @@ for (gene in genes) {
 
 TotalAlleles <- data.frame("Gene" = genes, "NumAlleles" = total_num_alleles)
 
-CoverageWeightedAverage <- function(caller, include_missing_genes = FALSE) {
+CoverageWeightedAverageCaller <- function(caller, include_missing_genes = FALSE) {
   # Compute weighted average of star allele coverage of all pharmacogenes in
   # PharmVar (excluding DPYD) for a specific diplotype caller. An option is
   # provided to include genes that are not implemented by the caller in the
@@ -365,13 +476,12 @@ CoverageWeightedAverage <- function(caller, include_missing_genes = FALSE) {
 }
 
 # Collect data required for plot
-
 WA_callers_no_missing <- c()
 WA_callers_missing <- c()
 
 for (caller in callers) {
-  cov1 <- CoverageWeightedAverage(caller, include_missing_genes = FALSE)
-  cov2 <- CoverageWeightedAverage(caller, include_missing_genes = TRUE)
+  cov1 <- CoverageWeightedAverageCaller(caller, include_missing_genes = FALSE)
+  cov2 <- CoverageWeightedAverageCaller(caller, include_missing_genes = TRUE)
   WA_callers_no_missing <- c(WA_callers_no_missing, cov1)
   WA_callers_missing <- c(WA_callers_missing, cov2)
 }
@@ -386,23 +496,23 @@ WA_callers_df <- data.frame(
 labs_WA <- scales::percent(WA_callers_df$WeightedAverage, accuracy = .1)
 WA_callers_df$Labels <- labs_WA
 
-# Create plot
+### Create plot
 
 ggplot(data = WA_callers_df, aes(fill = MissingInc, color = MissingInc,
                                  y = WeightedAverage, x = Caller, label = Labels)) +
   geom_bar(position = "dodge", stat = "identity", width = 0.7) + theme_bw() +
   scale_y_continuous(labels = scales::percent, limits = c(0,1)) +
   geom_text(show.legend = FALSE, position = position_dodge(width = 0.8), 
-            vjust = -0.5, size = 5, fontface = "bold") + 
+            vjust = -0.5, size = 5.5, fontface = "bold") + 
   labs(y = "Weighted Average(*Allele Coverage)", fill = "Missing genes included", 
-       color = "Missing genes included") +
+       color = "Missing genes included", x = "Star Allele Caller") +
   theme(axis.text = element_text(size = 14, face = "bold"),
         axis.title = element_text(size = 16, face = "bold.italic"),
-        legend.text = element_text(size = 14, face = "italic"),
+        legend.text = element_text(size = 16, face = "italic"),
         legend.title = element_text(size = 16, face = "bold.italic"),
         legend.position = "bottom",
         plot.title = element_text(size = 20)) +
-  ggtitle("Weighted averages of allele coverage for different star allele callers") +
+  ggtitle("Weighted averages of allele coverage for six different diplotype callers") +
   scale_fill_manual(values = c("darkolivegreen3", "firebrick2")) +
   scale_color_manual(values = c("darkolivegreen4", "firebrick4"))
 
@@ -410,19 +520,12 @@ ggplot(data = WA_callers_df, aes(fill = MissingInc, color = MissingInc,
 ### STAR ALLELE CALLERS: UPSET PLOTS ###
 ########################################
 
-# https://cran.r-project.org/web/packages/UpSetR/vignettes/basic.usage.html
-# ComplexHeatmap: https://jokergoo.github.io/ComplexHeatmap-reference/book/upset-plot.html
-# ComplexUpset: https://krassowski.github.io/complex-upset/articles/Examples_R.html
-
 # Read in data
 callable_alleles <- read.csv("Callable_alleles.csv", sep = "\t")
 
 # Get all genes to be included
 genes <- c("CYP2B6", "CYP2A6", "CYP2D6", "CYP4F2", "NAT2")
-callable_alleles_sub <- callable_alleles[, colnames(callable_alleles) %in% 
-                                           genes]
-
-genes <- colnames(callable_alleles)[2:15]
+callable_alleles_sub <- callable_alleles[, colnames(callable_alleles) %in% genes]
 
 # Get caller names 
 callers <- callable_alleles$Caller
@@ -436,7 +539,7 @@ for (gene in genes) {
   # Define list to store callable alleles for the gene as vectors
   temp_list <- list()
   
-  for (row in 1:6) {
+  for (row in 1:5) {
   
     # Obtain data
     data_row <- callable_alleles[gene][row,]
@@ -453,9 +556,12 @@ for (gene in genes) {
     # Add vector (or NA) to list
     temp_list[[row]] <- alleles
   }
+
+  # Add ursaPGx callable alleles
+  temp_list[[6]] <- ursaPGx_callable_alleles_list[[ gene ]]
   
   # Set list item names to names of callers
-  names(temp_list) <- callers
+  names(temp_list) <- c(callers, "ursaPGx")
   
   # Remove NA entries
   temp_list2 <- temp_list[!is.na(temp_list)]
@@ -483,25 +589,25 @@ for (gene in genes) {
   gene_callers <- colnames(m2)
   
   # Create upset plot
-  if (gene == "CYP2B6") { # No complement set for CYP2B6
+  if (gene %in% c("CYP2B6", "CYP2D6")) { # No complement set for CYP2B6 and CYP2D6
     p2 <- upset(m2, gene_callers, width_ratio = 0.1, intersections = 'all',
                 mode = "inclusive_union", max_degree = 2, name = paste("Caller combinations"),
                 wrap = TRUE, stripes = c("lightgoldenrodyellow"), set_sizes = FALSE,
                 themes=upset_default_themes(text=element_text(face = "bold",
-                                                              size = 15)),
+                                                              size = 20)),
                 base_annotations = list(
                   'Intersection size'=
                     intersection_size(text_mapping=aes(label=paste0(round(
                       !!get_size_mode('inclusive_union') / !!nrow(m2) * 100, 1), "%",
                       "\n", "(", !!get_size_mode("inclusive_union"), ")")),
-                      mode = "inclusive_union", text=list(size = 4, fontface="bold"),
+                      mode = "inclusive_union", text=list(size = 6, fontface="bold"),
                       bar_number_threshold = 1, mapping = aes(fill = "bars_color")) +
                     ylab("Percentage coverage\n(absolute coverage)") +
-                    scale_y_continuous(limits = c(0,nrow(m2) + 5),  
+                    scale_y_continuous(limits = c(0,nrow(m2) + 30),  
                                        labels = scales::percent_format(scale = 100/nrow(m2)),
                                        breaks=c(0, 20, 40, 60, 80, 100) / 100 * nrow(m2)) +
                     annotate(geom="text", x=Inf, y=Inf, label=paste("Total:", nrow(m2)),
-                             vjust=1, hjust=1, size = 5, fontface = "bold") +
+                             vjust=1, hjust=1, size = 8, fontface = "bold") +
                     scale_fill_manual(values=c("bars_color"="darkolivegreen3"), guide="none")
                   ),
                 matrix = (
@@ -519,27 +625,27 @@ for (gene in genes) {
                     )
                   )
                 ) + ggtitle(paste("Combined coverages of star allele callers for", gene)) +
-      theme(plot.title = element_text(size = 20, face = "bold"))
+      theme(plot.title = element_text(size = 25, face = "bold"))
   }
   else {
     p2 <- upset(m2, gene_callers, width_ratio = 0.1, intersections = 'all',
                 mode = "inclusive_union", max_degree = 2, name = paste("Caller combinations"),
                 wrap = TRUE, stripes = c("lightgoldenrodyellow"), set_sizes = FALSE,
                 themes=upset_default_themes(text=element_text(face = "bold",
-                                                              size = 15)),
+                                                              size = 20)),
                 base_annotations = list(
                   'Intersection size'=
                     intersection_size(text_mapping=aes(label=paste0(round(
                       !!get_size_mode('inclusive_union') / !!nrow(m2) * 100, 1), "%",
                       "\n", "(", !!get_size_mode("inclusive_union"), ")")),
-                      mode = "inclusive_union", text=list(size = 4, fontface="bold"),
+                      mode = "inclusive_union", text=list(size = 6, fontface="bold"),
                       bar_number_threshold = 1, mapping = aes(fill = "bars_color")) +
                     ylab("Percentage coverage\n(absolute coverage)") +
-                    scale_y_continuous(limits = c(0,nrow(m2)),  
+                    scale_y_continuous(limits = c(0,nrow(m2) + 1),  
                                        labels = scales::percent_format(scale = 100/nrow(m2)),
                                        breaks=c(0, 20, 40, 60, 80, 100) / 100 * nrow(m2)) +
                     annotate(geom="text", x=Inf, y=Inf, label=paste("Total:", nrow(m2)),
-                             vjust=1, hjust=1, size = 5, fontface = "bold") +
+                             vjust=1, hjust=1, size = 8, fontface = "bold") +
                     scale_fill_manual(values=c("bars_color"="darkolivegreen3"), guide="none")
                   ),
                 queries = list(
@@ -562,205 +668,8 @@ for (gene in genes) {
                     )
                   )
                 ) + ggtitle(paste("Combined coverages of star allele callers for", gene)) +
-      theme(plot.title = element_text(size = 20, face = "bold"))
+      theme(plot.title = element_text(size = 25, face = "bold"))
   }
   upset_plots[[index]] <- p2
   index <- index + 1
 }
-
-upset_plots[[1]]
-upset_plots[[2]]
-upset_plots[[3]]
-upset_plots[[4]]
-upset_plots[[5]]
-
-# IDEA: limit the combinations to three-way combinations
-# IDEA: switch to ComplexUpset package!!
-# (https://krassowski.github.io/complex-upset/articles/Examples_R.html#basic-usage)
-
-####################################
-### Star Allele Search + ursaPGx ###
-####################################
-
-# Read in data
-callable_alleles <- read.csv("Callable_alleles.csv", sep = "\t")
-covered_alleles <- read.csv("Covered_alleles_databases.csv", sep = "\t")
-
-# Get all genes to be included
-genes <- colnames(callable_alleles)[2:15]
-
-# Initiate lists
-ursaPGx_callable_alleles_list <- list()
-sas_covered_alleles_list <- list()
-
-# Gather callable alleles by ursaPGx and covered alleles by Star Allele Search:
-for (gene in genes) {
-  
-  ## ursaPGx ##
-  
-  # Obtain data
-  data_row <- callable_alleles[gene][6,] # ursaPGx row
-  data_row <- substr(data_row, 3, nchar(data_row) - 2) # Exclude [' and '] parts
-  
-  # Split data to obtain vector of star alleles
-  ursaPGx_vec <- stringr::str_split(data_row, pattern = "', '")[[1]]
-  
-  # If no star alleles can be called, set list entry to NA
-  if (ursaPGx_vec[1] == "") {
-    ursaPGx_vec <- NA
-  }
-  
-  # Add vector for gene to overall list
-  ursaPGx_callable_alleles_list[[ gene ]] <- ursaPGx_vec
-  
-  ## Star Allele Search ##
-  
-  # Obtain data
-  data_row <- covered_alleles[gene][2,] # Star Allele Search row
-  
-  if (data_row == "[]") {
-    SAS_vec <- NA
-  } 
-  else {
-    # Exclude [' and '] parts
-    data_row <- substr(data_row, 3, nchar(data_row) - 2) 
-    
-    # Split data to obtain vector of star alleles
-    SAS_vec <- stringr::str_split(data_row, pattern = "', '")[[1]]  
-  }
-  
-  # Add vector of alleles to list
-  sas_covered_alleles_list[[ gene ]] <- SAS_vec
-  
-}
-
-# First, validate that all star alleles covered in Star Allele Search are callable by ursaPGx
-validation <- rep(TRUE, times = length(genes))
-names(validation) <- genes
-
-for (gene in genes) {
-  
-  # Get vector of star alleles callable by ursaPGx
-  call_vec <- ursaPGx_callable_alleles_list[[ gene ]]
- 
-  # Get vector of star alleles present in Star Allele Search
-  sas_vec <- sas_covered_alleles_list[[ gene ]]
-  
-  # Validation
-  if (prod(is.element(sas_vec, call_vec)) == 0) {
-    validation[gene] <- FALSE
-  }
-  
-}
-
-gene <- "CYP2C19"
-call_vec <- ursaPGx_callable_alleles_list[[ gene ]]
-sas_vec <- sas_covered_alleles_list[[ gene ]]
-
-# Which alleles are in Star Allele Search but not listed as callable by ursaPGx?
-setdiff(sas_vec, call_vec) 
-
-
-gene <- "CYP2D6"
-call_vec <- ursaPGx_callable_alleles_list[[ gene ]]
-sas_vec <- sas_covered_alleles_list[[ gene ]]
-
-# Which alleles are in Star Allele Search but not listed as callable by ursaPGx?
-setdiff(sas_vec, call_vec) 
-
-# Conclusions:
-# - CYP2C19: the *38 allele is present in star allele search, but is not listed
-#            as a callable star allele in ursaPGx
-# - CYP2D6: the star alleles *5, *13 and *68 were found in star allele search,
-#           but are not listed as callable by ursaPGx
-
-# Recompute allele coverages for Star Allele Search, only considering alleles that can be 
-# called by ursaPGx (+ additional ones that were found in SAS)
-
-SAS_cov_updated <- rep(1, times = length(genes))
-names(SAS_cov_updated) <- genes
-for (gene in genes) {
-  
-  # Get vector of star alleles callable by ursaPGx
-  call_vec <- ursaPGx_callable_alleles_list[[ gene ]]
-  
-  # Get vector of star alleles present in Star Allele Search
-  sas_vec <- sas_covered_alleles_list[[ gene ]]
-  
-  # Get total number of callable star alleles (+ those found in SAS)
-  alleles <- union(call_vec, sas_vec)
-  
-  # Compute updated coverage
-  if (sum(is.na(sas_vec)) == 0) {
-    SAS_cov_updated[gene] <- length(sas_vec) / length(alleles)
-  } else {
-    SAS_cov_updated[gene] <- 0
-  }
-  
-}
-
-## Compare updated coverages with previous coverages
-
-## Prepare data
-
-og_coverages <- cov_databases$Star.allele.search
-names(og_coverages) <- row.names(cov_databases)
-
-genes_db <- c(names(og_coverages), names(SAS_cov_updated))
-status <- rep(c("Before", "Updated"), each = length(genes))
-cov_updated <- c(og_coverages, SAS_cov_updated)
-labs_db <- scales::percent(cov_updated, accuracy = 1)
-data_db <- data.frame("Gene" = genes_db, "Status" = status, "Coverage" = cov_updated,
-                      "Labels"= labs_db)
-
-## Create plot
-
-p_sas_updated <- ggplot(data = data_db, aes(fill = Status, color = Status, y = Coverage, 
-                                   x = Gene, label = Labels)) +
-  geom_bar(position = "dodge", stat = "identity", width = 0.7) + theme_bw() +
-  scale_y_continuous(labels = scales::percent, limits = c(0,1)) +
-  geom_text(position = position_dodge(width = 0.8), vjust = -0.5, size = 3.5,
-            fontface = "bold", show.legend = FALSE) + labs(y = "Allele Coverage") +
-  theme(axis.text = element_text(size = 14, face = "bold"), 
-        axis.title = element_text(size = 16, face = "bold.italic"),
-        legend.text = element_text(size = 14, face = "italic"),
-        legend.title = element_text(size = 16, face = "bold.italic"),
-        legend.position = "bottom",
-        plot.title = element_text(size= 20))  +
-  ggtitle("Comparison of updated Star Allele Search coverages to old ones") +
-  scale_fill_manual(values = c("royalblue2", "maroon3")) +
-  scale_color_manual(values = c("royalblue4", "maroon"))
-
-## Update barplot
-
-## Prepare data
-
-genes_db <- rep(gene_names_db, times = 2)
-
-database <- rep(c("GeT-RM", "Star Allele Search"), each = length(gene_names_db))
-
-coverage_db <- c(cov_databases$GeT.RM, SAS_cov_updated)
-
-labs_db <- scales::percent(coverage_db, accuracy = 1)
-
-data_db <- data.frame("Gene" = genes_db, "Database" = database, "Coverage" = coverage_db,
-                      "Labels"= labs_db)
-
-## Create plot
-
-p_db2 <- ggplot(data = data_db, aes(fill = Database, color = Database, y = Coverage, 
-                                   x = Gene, label = Labels)) +
-  geom_bar(position = "dodge", stat = "identity", width = 0.7) + theme_bw() +
-  scale_y_continuous(labels = scales::percent, limits = c(0,1)) +
-  geom_text(position = position_dodge(width = 0.8), vjust = -0.5, size = 3.5,
-            fontface = "bold", show.legend = FALSE) + labs(y = "Allele Coverage") +
-  theme(axis.text = element_text(size = 14, face = "bold"),
-        axis.title = element_text(size = 16, face = "bold.italic"),
-        legend.text = element_text(size = 14, face = "italic"),
-        legend.title = element_text(size = 16, face = "bold.italic"),
-        legend.position = "bottom",
-        plot.title = element_text(size= 20))  +
-  ggtitle("Star allele coverage of databases for different genes") +
-  scale_fill_manual(values = c("royalblue2", "maroon3")) +
-  scale_color_manual(values = c("royalblue4", "maroon"))
-

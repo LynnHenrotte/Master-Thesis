@@ -1,32 +1,26 @@
+import sys
+sys.path.insert(1, 'pharmvar_api')
+
 from client import PharmVarApi
 import pandas as pd
 import regex as re
 import os
 
-# Set path to working directory
-os.chdir("/mnt/c/Users/lynnh/OneDrive/Bureaublad/2nd Master Stat/Master Thesis/WP2/pharmvar_api")
-
 # Get all alleles in PharmVar database
 pharmvar_api = PharmVarApi()
 alleles = pharmvar_api.get_all_alleles(exclude_sub_alleles = True)
 
-# Define most general star allele regular expression
-star_allele_re = re.compile(r'\*\d+[A-Z]*')
+# Regular expression definitions #
+star_allele_re = re.compile(r'\*\d+[A-Z]*') # most general star allele
+sub_allele_re = re.compile(r'\*\d+\.\d+') # sub allele
+legacy_allele_re = re.compile(r'\*\d+[A-Z]') # legacy allele
+nonlegacy_allele_re = re.compile(r'\*\d+') # non-legacy allele
 
-# Define sub allele regular expression
-sub_allele_re = re.compile(r'\*\d+\.\d+')
-
-# Define legacy allele regular expression
-legacy_allele_re = re.compile(r'\*\d+[A-Z]')
-
-# Define non-legacy allele regular expression
-nonlegacy_allele_re = re.compile(r'\*\d+')
-
-# Define function to obtain names of all alleles for any gene in PharmVar
-def getAlleleNames(gene: str) -> list:
+# Define function to obtain names of all alleles for any gene in PharmVar #
+def getAlleleNames(gene: str, short = False) -> list:
     """
         Given the name of a pharmacogene in PharmVar, this function returns 
-        a list containing the names of all core star alleles in the format "gene*X"
+        a list containing the names of all core star alleles in the format "gene*X",
         with X the number of the star allele.
     """
     
@@ -36,58 +30,24 @@ def getAlleleNames(gene: str) -> list:
     # Extract allele names and return them in a list
     allele_names = [0] * gene_alleles.__len__()
     for i, allele in enumerate(gene_alleles):
-        allele_names[i] = allele.allele_name
-    return allele_names
-
-# Define function to obtain names of all alleles for any gene in PharmVar
-def getAlleleNamesShort(gene: str) -> list:
-    """
-        Given the name of a pharmacogene in PharmVar, this function returns 
-        a list containing the names of all core star alleles in the format "*X"
-        with X the number of the star allele.
-    """
-    
-    # Get all Allele objects from the gene
-    gene_alleles = alleles.filter(gene_symbol = gene)
-    
-    # Extract star alleles from allele names and return them in a list
-    allele_names = [0] * gene_alleles.__len__()
-    for i, allele in enumerate(gene_alleles):
         full_name = allele.allele_name
-        allele_names[i] = nonlegacy_allele_re.findall(full_name)[0]
+        if short:
+            allele_names[i] = nonlegacy_allele_re.findall(full_name)[0]
+        else:
+            allele_names[i] = full_name
     return allele_names
 
-
-# Legacy alleles and legacy allele mappings for some genes
-CYP1A1_legacy_alleles = ["2A", "2B", "2C"]
+# Legacy allele mappings for some genes
 CYP1A1_legacy_allele_map = {"2A": "2", "2B": "2", "2C": "2"}
-
-SLC01B1_legacy_alleles= ["1A", "1B", "17", "18", "20", "21", "22", "35"]
 SLCO1B1_legacy_allele_map = {"1A": "1", "1B": "37", "17": "15", "18": "14", "20": "20", "21": "20", "22": "19", "35": "20"}
-
-CYP1A2_legacy_alleles = ["1A", "1B", "1F", "1L", "1M", "1N", "1P", "1Q", "1R", "1S", "1T", "1U"]
-CYP1A2_legacy_allele_map = {"1A": "1", "1B": "1", "1F": "30", "1L": "30", "1M": "30", "1N": "30", "1P": "30", "1Q": "30", "1R": "30", "1S": "1", "1T": "1", "1U": "1"}
-
-CYP2A6_legacy_alleles = ["4D"]
+CYP1A2_legacy_allele_map = {"1A": "1", "1B": "1", "1F": "30", "1L": "30", "1M": "30", "1N": "30", "1P": "30", "1Q": "30", 
+                            "1R": "30", "1S": "1", "1T": "1", "1U": "1"}
 CYP2A6_legacy_allele_map = {"4D": "47"}
-
-CYP2C19_legacy_alleles = ["27", "1A"]
 CYP2C19_legacy_allele_map = {"27": "1", "1A": "38"}
-
-CYP2D6_legacy_alleles = ["57", "14A"]
 CYP2D6_legacy_allele_map = {"57": "36", "14A": "114"}
-
-CYP3A4_legacy_alleles = ["1A", "1B"]
 CYP3A4_legacy_allele_map = {"1A": "1", "1B": "1"}
-
-CYP3A5_legacy_alleles = ["2","3A", "3B", "3D", "3F", "3G", "3J", "3K", "3L", "4", "5", "10", "11"]
 CYP3A5_legacy_allele_map = {"2": "3", "3A": "3", "3B": "3", "3D": "3", "3F": "3", "3G": "3", "3J": "3",
                      "3K": "3", "3L": "3", "4": "3", "5": "3", "10": "3", "11": "3"}
-
-NAT2_legacy_alleles = ["12A", "12B", "12C", "12I", "11A", "13A", "20", "5C", "5B", "5F", "5W", "5BB", "6B", "6A", 
-                       "6D", "6E", "6L", "7A", "7B", "14A", "14B", "14D", "5D", "5A", "14F", "14C", "5E", "5L", "5O", 
-                       "5N", "6C", "6M", "6P", "6K", "6H", "6O", "7C", "12E", "12F", "12G", "12H", "12J", "14E", "14G", 
-                       "14I", "14H", "12D", "12N", "6G"]
 NAT2_legacy_allele_map = {"12A" : "1", "12B" : "1", "12C" : "1", "12I" : "1", "11A" : "4", "13A" : "4", "20" : "4",
                           "5C" : "5", "5B" : "5", "5F" : "5", "5W" : "5", "5BB" : "5", "6B" : "6", "6A" : "6", "6D" : "6",
                           "6E" : "6", "6L" : "6", "7A" : "7", "7B" : "7", "14A" : "14", "14B" : "14", "14D" : "15",
@@ -173,9 +133,7 @@ def get_allele_coverage(gene: str, database: pd.DataFrame) -> list[float, list[s
     coverage = num_SA_database / num_SA_all
     return [coverage, star_alleles_correct2]
 
-#print(get_allele_coverage("CYP2C19"))
-
-# Define list for all pharmacogenes in PharmVar
+# Define list for all pharmacogenes available in GeT-RM and Star Allele Search
 pharmacogenes_getRM = ["CYP2A6", "CYP2B6", "CYP2C8", "CYP2C9", "CYP2C19", "CYP2D6", 
                        "CYP3A4", "CYP3A5", "CYP4F2", "SLCO1B1", "NAT2", "CYP1A2"]
 
@@ -184,19 +142,15 @@ pharmacogenes_starAlleleSearch = ["CYP2A6", "CYP2B6", "CYP2C8", "CYP2C9", "CYP2C
 
 genes_together = list(set(pharmacogenes_getRM).union(set(pharmacogenes_starAlleleSearch)))
 
-# NOT IN GET-RM DATA SET: NUDT15, CYP2A13
-# NOT IN STAR ALLELE SEARCH: NAT2, CYP1A2
-# DPYD: DON'T INCLUDE! (mss wel)
-
 # Read in data sets
 data_getRM = pd.read_excel("Datasets/updated_getrm_calls2.xlsx")
 data_starAlleleSearch = pd.read_excel("Datasets/Star-allele-search-db.xlsx")
 
-# Get allele coverages for all PharmVar pharmacogenes that are present in the data sets
-coverages_getRM = [0] * len(pharmacogenes_getRM)
-
-# Also save lists of star alleles that are encountered in both datasets
+# Initiate list to store star alleles that are encountered in both datasets
 covered_alleles = {}
+
+# Get allele coverages for all PharmVar pharmacogenes that are present in GeT-RM
+coverages_getRM = [0] * len(pharmacogenes_getRM)
 for i, gene in enumerate(pharmacogenes_getRM):
 
     coverage = get_allele_coverage(pharmacogenes_getRM[i], data_getRM)
@@ -208,7 +162,7 @@ for i, gene in enumerate(pharmacogenes_getRM):
     covered_alleles[gene] = {}
     covered_alleles[gene]["GeT-RM"] = coverage[1]
 
-
+# Get allele coverages for all PharmVar pharmacogenes that are present in Star Allele Search
 coverages_starAlleleSearch = [0] * len(pharmacogenes_starAlleleSearch)
 for i, gene in enumerate(pharmacogenes_starAlleleSearch):
 
@@ -225,9 +179,6 @@ results_getRM = pd.DataFrame({"Gene": pharmacogenes_getRM, "GeT-RM": coverages_g
 results_starAlleleSearch = pd.DataFrame({"Gene": pharmacogenes_starAlleleSearch, "Star allele search": coverages_starAlleleSearch})
 result_all = results_getRM.merge(results_starAlleleSearch, how = "outer")
 print(result_all)
-
-# NOT IN GET-RM DATA SET: NUDT15, CYP2A13
-# NOT IN STAR ALLELE SEARCH: NAT2, CYP1A2
 
 # Fill up dictionary with non-covered genes
 covered_alleles["NUDT15"].update({"GeT-RM": []})
@@ -246,13 +197,10 @@ for i, gene in enumerate(genes_together):
     # Add to dataframe
     covered_alleles_df = covered_alleles_df.merge(gene_data)
     
-covered_alleles_df.to_csv("Covered_alleles_databases.csv", sep = "\t", index = False, header = True)
-
-print(covered_alleles)
-print(covered_alleles_df)
+covered_alleles_df.to_csv("Covered_Alleles_Databases.csv", sep = "\t", index = False, header = True)
 
 # Export results to .csv file
-# result_all.to_csv("DatabaseAlleleCoverage.csv", sep = "\t", index = False, header = True)
+result_all.to_csv("Database_Allele_Coverage.csv", sep = "\t", index = False, header = True)
 
 # For each gene, get list of star alleles recognized by PharmVar and export them
 defined_alleles_df = pd.DataFrame({"Gene": genes_together})
@@ -260,8 +208,10 @@ defined_alleles = []
 for i, gene in enumerate(genes_together):
     
     # Extract names of valid star alleles
-    valid_alleles = getAlleleNamesShort(gene)
+    valid_alleles = getAlleleNames(gene, short = True)
     defined_alleles.append(valid_alleles)
 
 defined_alleles_df["Alleles"] = defined_alleles
+
+# Export results to .csv file
 defined_alleles_df.to_csv("Defined_alleles_all.csv", sep = "\t", index = False, header = True)
