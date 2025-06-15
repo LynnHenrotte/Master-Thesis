@@ -15,11 +15,63 @@ library("ggpubr")
 
 ##----------------------------------------------------------------------------##
 
-##----------------------------------------------------------------------------##
-
 ###----- CYP2C9 -----###
 
 ##----------------------------------------------------------------------------##
+
+### Average coverage ###
+cyp2c9_5x_coverage <- read.delim("ReSeq_CYP2C9_5x_coverage_summary.tsv", sep = "\t")
+
+cyp2c9_15x_coverage <- read.delim("ReSeq_CYP2C9_15x_coverage_summary.tsv", sep = "\t")
+
+cyp2c9_30x_coverage <- read.delim("ReSeq_CYP2C9_30x_coverage_summary.tsv", sep = "\t")
+
+## Manage and combine data ##
+cyp2c9_5x_sim_coverage <- cyp2c9_5x_coverage$Mean_coverage
+cyp2c9_15x_sim_coverage <- cyp2c9_15x_coverage$Mean_coverage
+cyp2c9_30x_sim_coverage <- cyp2c9_30x_coverage$Mean_coverage
+cyp2c9_sim_coverage <- c(cyp2c9_5x_sim_coverage, cyp2c9_15x_sim_coverage, cyp2c9_30x_sim_coverage)
+cyp2c9_sim_group <- rep("Simulated", times = length(cyp2c9_sim_coverage))
+cyp2c9_sim_int_coverage <- c(rep("5x", times = length(cyp2c9_5x_sim_coverage)),
+                             rep("15x", times = length(cyp2c9_15x_sim_coverage)),
+                             rep("30x", times = length(cyp2c9_30x_sim_coverage)))
+cyp2c9_sim_number <- c(1:length(cyp2c9_5x_sim_coverage), 1:length(cyp2c9_15x_sim_coverage),
+                       1:length(cyp2c9_30x_sim_coverage))
+cyp2c9_sim_ID <- paste0(cyp2c9_sim_group, "_", cyp2c9_sim_int_coverage)
+
+cyp2c9_5x_exp_coverage <- rep(5, times = length(cyp2c9_5x_sim_coverage))
+cyp2c9_15x_exp_coverage <- rep(15, times = length(cyp2c9_15x_sim_coverage))
+cyp2c9_30x_exp_coverage <- rep(30, times = length(cyp2c9_30x_sim_coverage))
+cyp2c9_exp_coverage <- c(cyp2c9_5x_exp_coverage, cyp2c9_15x_exp_coverage, cyp2c9_30x_exp_coverage)
+cyp2c9_exp_group <- rep("Expected", times = length(cyp2c9_exp_coverage))
+cyp2c9_exp_int_coverage <- c(rep("5x", times = length(cyp2c9_5x_exp_coverage)),
+                             rep("15x", times = length(cyp2c9_15x_exp_coverage)),
+                             rep("30x", times = length(cyp2c9_30x_exp_coverage)))
+cyp2c9_exp_number <- c(1:length(cyp2c9_5x_exp_coverage), 1:length(cyp2c9_15x_exp_coverage),
+                       1:length(cyp2c9_30x_exp_coverage))
+cyp2c9_exp_ID <- paste0(cyp2c9_exp_group, "_", cyp2c9_exp_int_coverage)
+
+cyp2c9_coverage <- data.frame("Mean_coverage" = c(cyp2c9_sim_coverage, cyp2c9_exp_coverage),
+                              "Group" = c(cyp2c9_sim_group, cyp2c9_exp_group),
+                              "Intended_coverage" = c(cyp2c9_sim_int_coverage, cyp2c9_exp_int_coverage),
+                              "Number" = c(cyp2c9_sim_number, cyp2c9_exp_number),
+                              "ID" = c(cyp2c9_sim_ID, cyp2c9_exp_ID))
+cyp2c9_coverage$Group <- factor(cyp2c9_coverage$Group, levels = c("Simulated", "Expected"))
+cyp2c9_coverage$Intended_coverage <- factor(cyp2c9_coverage$Intended_coverage, levels = c("5x", "15x", "30x"))
+  
+## Plot expected versus simulated (average) coverage
+
+ggplot(data = cyp2c9_coverage, aes(x = Number, y = Mean_coverage)) + 
+  geom_line(aes(group = ID, color = Intended_coverage, linetype = Group), 
+            linewidth = 1, alpha = 0.8) + theme_bw() +
+  labs(x = "Simulation", y = "Average coverage", color = "Simulated coverage") + 
+  scale_y_continuous(breaks = c(5, 15, 30))  +
+  theme(axis.text = element_text(size = 20, face = "bold"),
+        axis.title = element_text(size = 20, face = "bold.italic"),
+        legend.text = element_text(size = 20, face = "italic"),
+        legend.title = element_text(size = 20, face = "bold.italic"),
+        legend.position = "bottom",
+        plot.title = element_text(size= 25, hjust = 0.5))
 
 ### Per base average quality scores ###
 
