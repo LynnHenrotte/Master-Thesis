@@ -1,4 +1,5 @@
-## Master Thesis - Lynn Henrotte 
+## Master Thesis - In Silico Read Simulation for PGx 
+### Lynn Henrotte 
 
 This repository contains any code that was written during my master thesis project.
 
