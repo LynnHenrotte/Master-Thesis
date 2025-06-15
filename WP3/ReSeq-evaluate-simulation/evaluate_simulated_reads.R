@@ -15,9 +15,6 @@ library("ggpubr")
 
 ##----------------------------------------------------------------------------##
 
-# Set working directory
-setwd("C:/Users/lynnh/OneDrive/Bureaublad/2nd Master Stat/Master Thesis/WP3/ReSeq evaluate reads")
-
 ##----------------------------------------------------------------------------##
 
 ###----- CYP2C9 -----###
@@ -189,7 +186,6 @@ cyp2c9_qscores_grouped <- cyp2c9_qscores %>% filter(Allele != "CYP2C9*1") %>%
             .groups = "drop")
 
 cyp2c9_qscores_grouped$Data <- "Synthetic"
-#cyp2c9_qscores_grouped$ID <- paste0("Variants_", cyp2c9_qscores_grouped$Coverage)
 cyp2c9_qscores_grouped$Group <- "Variants"
 
 # Add CYP2C9*1 results
@@ -208,8 +204,6 @@ cyp2c9_1_qscores <- cyp2c9_1_qscores %>% group_by(Position) %>%
 cyp2c9_qscores_grouped <- rbind(cyp2c9_qscores_grouped, cyp2c9_1_qscores)
 
 # Add real NovaSeq data results
-
-setwd("C:/Users/lynnh/OneDrive/Bureaublad/2nd Master Stat/Master Thesis/WP3/ReSeq evaluate reads")
 cyp2c9_real_qscores_files <- list.files("evaluation_output", 
                                       pattern = "*average_qscore_per_base.txt", full.names=TRUE)
 
@@ -261,7 +255,6 @@ p_qscores <- ggplot(data = cyp2c9_qscores_grouped, aes(x = Position, y = Joint_Q
         legend.title = element_text(size = 25, face = "bold.italic"),
         legend.position = "bottom",
         plot.title = element_text(size= 25, hjust = 0.5))
-
 
 ## Plot average quality scores per position in the first and second reads separately
 
@@ -628,7 +621,6 @@ cyp2c9_error_rate_grouped <- cyp2c9_error_rate %>% filter(Allele != "CYP2C9*1") 
             "Joint_Indel" = mean(Joint_Indel), .groups = "drop")
 
 cyp2c9_error_rate_grouped$Data <- "Synthetic"
-#cyp2c9_error_rate_grouped$ID <- paste0("Variants_", cyp2c9_error_rate_grouped$Coverage)
 cyp2c9_error_rate_grouped$Group <- "Variants"
 
 # Add CYP2C9*1 results
@@ -651,8 +643,6 @@ cyp2c9_1_error_rate <- cyp2c9_1_error_rate %>% group_by(Position) %>%
 cyp2c9_error_rate_grouped <- rbind(cyp2c9_error_rate_grouped, cyp2c9_1_error_rate)
 
 # Add real NovaSeq data results
-
-setwd("C:/Users/lynnh/OneDrive/Bureaublad/2nd Master Stat/Master Thesis/WP3/ReSeq evaluate reads")
 cyp2c9_real_error_files <- list.files("evaluation_output", 
                                         pattern = "*error_rates_per_base.txt", full.names=TRUE)
 
@@ -888,7 +878,6 @@ p_cyp2c9_err_indel_grouped_no_wildtype_read2 <- ggplot(data = cyp2c9_error_rate_
         legend.position = "bottom",
         plot.title = element_text(size= 25, hjust = 0.5))
 
-
 ggarrange(p_cyp2c9_err_indel_grouped_no_wildtype_read1, 
           p_cyp2c9_err_indel_grouped_no_wildtype_read2, 
           nrow = 1, ncol = 2, common.legend = TRUE, legend = "bottom")
@@ -1042,7 +1031,6 @@ cyp2c9_GC_grouped <- cyp2c9_GC %>%
 
 cyp2c9_GC_grouped$Data <- "Synthetic"
 cyp2c9_GC_grouped$Group <- "Variants"
-#cyp2c9_GC_grouped$ID <- paste0("Variants_", cyp2c9_GC_grouped$Coverage)
 
 # Add CYP2C9*1 results
 
@@ -1053,8 +1041,6 @@ cyp2c9_1_GC <- cyp2c9_GC[cyp2c9_GC$Allele == "CYP2C9*1",] %>%
 cyp2c9_GC_grouped <- rbind(cyp2c9_GC_grouped, cyp2c9_1_GC)
 
 # Add real NovaSeq data results
-
-setwd("C:/Users/lynnh/OneDrive/Bureaublad/2nd Master Stat/Master Thesis/WP3/ReSeq evaluate reads")
 cyp2c9_real_GC_files <- list.files("evaluation_output", pattern = "*GC_content.txt", full.names=TRUE)
 
 for (sample in 1:length(cyp2c9_real_GC_files)) {
@@ -1113,7 +1099,6 @@ ggplot(data = cyp2c9_GC_grouped, aes(x = GC_content, y = Percent)) +
 cyp2c9_GC_grouped2 <- cyp2c9_GC %>% group_by(GC_content) %>% 
   summarize("Percent" = mean(Percent), .groups = "drop")
 
-#cyp2c9_GC_grouped2$ID <- paste0("Simulations_", cyp2c9_GC_grouped2$Coverage)
 cyp2c9_GC_grouped2$Data <- "Synthetic"
 
 ## Add real NovaSeq data results
@@ -1169,10 +1154,6 @@ GC_var_synthetic <- var(GC_content_synthetic_reads)
 
 sqrt(GC_var_real)
 sqrt(GC_var_synthetic)
-
-### Wilcoxon test between real and simulated GC content values ###
-
-##wilcox.test(GC_content_synthetic_reads, GC_content_real_reads)
 
 ##----------------------------------------------------------------------------##
 
@@ -1352,7 +1333,6 @@ cyp2c9_insert_grouped <- cyp2c9_insert %>% filter(Allele != "CYP2C9*1") %>%
   summarize("Percent" = mean(Percent), .groups = "drop")
 
 cyp2c9_insert_grouped$Data <- "Synthetic"
-#cyp2c9_insert_grouped$ID <- paste0("Variants_", cyp2c9_insert_grouped$Coverage)
 cyp2c9_insert_grouped$Group <- "Variants"
 
 # Add CYP2C9*1 results
@@ -1363,9 +1343,7 @@ cyp2c9_1_insert <- cyp2c9_insert[cyp2c9_insert$Allele == "CYP2C9*1",] %>%
   mutate(Group = "Wild type", Data = "Synthetic")
 cyp2c9_insert_grouped <- rbind(cyp2c9_insert_grouped, cyp2c9_1_insert)
 
-# Add real NovaSeq data results (NOG DOEN)
-
-setwd("C:/Users/lynnh/OneDrive/Bureaublad/2nd Master Stat/Master Thesis/WP3/ReSeq evaluate reads")
+# Add real NovaSeq data results
 cyp2c9_real_insert_files <- list.files("evaluation_output", 
                                        pattern = "*insert_sizes.txt", full.names=TRUE)
 
@@ -1429,11 +1407,9 @@ ggplot(data = cyp2c9_insert_grouped, aes(x = Insert_Size, y = Percent)) +
 cyp2c9_insert_grouped2 <- cyp2c9_insert %>% group_by(Insert_Size) %>% 
   summarize("Percent" = mean(Percent), .groups = "drop")
 
-#cyp2c9_insert_grouped2$ID <- paste0("Simulations_", cyp2c9_insert_grouped2$Coverage)
 cyp2c9_insert_grouped2$Data <- "Synthetic"
 
-# Add real NovaSeq data results (NOG DOEN)
-
+# Add real NovaSeq data results
 cyp2c9_insert_grouped2 <- rbind(cyp2c9_insert_grouped2, cyp2c9_real_insert %>%
                                   dplyr::select(!Group))
 
