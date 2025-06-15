@@ -1,7 +1,7 @@
 ### Master Thesis: synthetic read simulation for PGx ###
-### Lynn Henrotte 2024-2025 ###
+### Lynn Henrotte - Academic year 2024-2025 ###
 
-### Diplotype calling: final plots ###
+### Diplotype calling: Results ###
 
 ### Packages ###
 
@@ -69,13 +69,9 @@ bar_pypgx_cyp2c9_coverage2 <- ggplot(data = data_cyp2c9_pypgx_coverage,
         legend.title = element_text(size = 20, face = "bold.italic"),
         legend.position = "bottom") 
 
-bar_pypgx_cyp2c9_coverage
-bar_pypgx_cyp2c9_coverage2
-
 #### Barplot indicating how often each CYP2C9 star allele was correctly called by PyPGx at 60x coverage ####
 
 # Read in data
-setwd("C:/Users/lynnh/OneDrive/Bureaublad/2nd Master Stat/Master Thesis/WP5")
 pypgx_cyp2c9_alleles_60x <- read.table("PyPGx_correct_CYP2C9_alleles_60x_freq.txt",
                                         sep = "\t", header = TRUE)
 
@@ -153,7 +149,6 @@ bar_pypgx_cyp2c9_alleles_60x_2 <- ggplot(data = pypgx_cyp2c9_alleles_60x,
 #### Barplot indicating how often each CYP2C9 star allele was correctly called by PyPGx at 30x coverage ####
 
 # Read in data
-setwd("C:/Users/lynnh/OneDrive/Bureaublad/2nd Master Stat/Master Thesis/WP5")
 pypgx_cyp2c9_alleles_30x <- read.table("PyPGx_correct_CYP2C9_alleles_30x_freq.txt",
                                        sep = "\t", header = TRUE)
 
@@ -233,7 +228,6 @@ bar_pypgx_cyp2c9_alleles_30x_2 <- ggplot(data = pypgx_cyp2c9_alleles_30x,
 #### Barplot indicating how often each CYP2C9 star allele was correctly called by PyPGx at 10x coverage ####
 
 # Read in data
-setwd("C:/Users/lynnh/OneDrive/Bureaublad/2nd Master Stat/Master Thesis/WP5")
 pypgx_cyp2c9_alleles_10x <- read.table("PyPGx_correct_CYP2C9_alleles_10x_freq.txt",
                                        sep = "\t", header = TRUE)
 
@@ -310,7 +304,6 @@ bar_pypgx_cyp2c9_alleles_10x_2 <- ggplot(data = pypgx_cyp2c9_alleles_10x,
   scale_color_manual(values = c("olivedrab3", "firebrick3")) +
   ggtitle("Percentage that each CYP2C9 star allele was correctly called by PyPGx at 10x coverage")
 
-
 ## Combine barplots for all coverages
 
 ggarrange(bar_pypgx_cyp2c9_alleles_10x_1,
@@ -378,13 +371,9 @@ bar_aldy_cyp2c9_coverage2 <- ggplot(data = data_aldy_cyp2c9_coverage,
         legend.title = element_text(size = 20, face = "bold.italic"),
         legend.position = "bottom")
 
-bar_aldy_cyp2c9_coverage
-bar_aldy_cyp2c9_coverage2
-
 #### Barplot indicating how often each CYP2C9 star allele was correctly called by Aldy at 60x coverage ####
 
 # Read in data
-setwd("C:/Users/lynnh/OneDrive/Bureaublad/2nd Master Stat/Master Thesis/WP5")
 aldy_cyp2c9_alleles_60x <- read.table("Aldy_correct_CYP2C9_alleles_60x_freq.txt",
                                        sep = "\t", header = TRUE)
 
@@ -460,7 +449,6 @@ bar_aldy_cyp2c9_alleles_60x_2 <- ggplot(data = aldy_cyp2c9_alleles_60x,
 #### Barplot indicating how often each CYP2C9 star allele was correctly called by Aldy at 30x coverage ####
 
 # Read in data
-setwd("C:/Users/lynnh/OneDrive/Bureaublad/2nd Master Stat/Master Thesis/WP5")
 aldy_cyp2c9_alleles_30x <- read.table("Aldy_correct_CYP2C9_alleles_30x_freq.txt",
                                        sep = "\t", header = TRUE)
 
@@ -534,7 +522,6 @@ bar_aldy_cyp2c9_alleles_30x_2 <- ggplot(data = aldy_cyp2c9_alleles_30x,
 #### Barplot indicating how often each CYP2C9 star allele was correctly called by Aldy at 10x coverage ####
 
 # Read in data
-setwd("C:/Users/lynnh/OneDrive/Bureaublad/2nd Master Stat/Master Thesis/WP5")
 aldy_cyp2c9_alleles_10x <- read.table("Aldy_correct_CYP2C9_alleles_10x_freq.txt",
                                        sep = "\t", header = TRUE)
 
@@ -671,17 +658,9 @@ bar_stellarpgx_cyp2c9_coverage2 <- ggplot(data = data_stellarpgx_cyp2c9_coverage
         legend.title = element_text(size = 20, face = "bold.italic"),
         legend.position = "bottom")
 
-bar_stellarpgx_cyp2c9_coverage
-bar_stellarpgx_cyp2c9_coverage2
-
-### CONCLUSIONS BASED ON THIS GRAPH: AS COVERAGE DECREASES, THE NUMBER OF CORRECT DIPLOTYPE CALLS BY STELLARPGX
-### DECREASES AS WELL. HOWEVER, IT IS PROMISING THAT MOST OF THESE MISSED CALLS END UP AS PARTIALLY CORRECT
-### INSTEAD OF COMPLETELY WRONG, THE CATEGORY WHICH DOES NOT SEEM TO CHANGE A LOT WHEN COVERAGE CHANGES.
-
 #### Barplot indicating how often each CYP2C9 star allele was correctly called by StellarPGx at 60x coverage ####
 
 # Read in data
-setwd("C:/Users/lynnh/OneDrive/Bureaublad/2nd Master Stat/Master Thesis/WP5")
 stellarpgx_cyp2c9_alleles_60x <- read.table("StellarPGx_correct_CYP2C9_alleles_60x_freq.txt",
                                       sep = "\t", header = TRUE)
 
@@ -759,7 +738,6 @@ bar_stellarpgx_cyp2c9_alleles_60x_2 <- ggplot(data = stellarpgx_cyp2c9_alleles_6
 #### Barplot indicating how often each CYP2C9 star allele was correctly called by StellarPGx at 30x coverage ####
 
 # Read in data
-setwd("C:/Users/lynnh/OneDrive/Bureaublad/2nd Master Stat/Master Thesis/WP5")
 stellarpgx_cyp2c9_alleles_30x <- read.table("StellarPGx_correct_CYP2C9_alleles_30x_freq.txt",
                                       sep = "\t", header = TRUE)
 # Add 0 frequency for *25
@@ -836,7 +814,6 @@ bar_stellarpgx_cyp2c9_alleles_30x_2 <- ggplot(data = stellarpgx_cyp2c9_alleles_3
 #### Barplot indicating how often each CYP2C9 star allele was correctly called by StellarPGx at 10x coverage ####
 
 # Read in data
-setwd("C:/Users/lynnh/OneDrive/Bureaublad/2nd Master Stat/Master Thesis/WP5")
 stellarpgx_cyp2c9_alleles_10x <- read.table("StellarPGx_correct_CYP2C9_alleles_10x_freq.txt",
                                       sep = "\t", header = TRUE)
 
@@ -922,7 +899,6 @@ ggarrange(bar_stellarpgx_cyp2c9_alleles_10x_2,
           bar_stellarpgx_cyp2c9_alleles_60x_2,
           ncol = 1, nrow = 3, common.legend = TRUE, legend = "bottom")
 
-
 ####-- PyPGx, Aldy and StellarPGx combined --####
 
 ggarrange(bar_pypgx_cyp2c9_coverage2,
@@ -942,8 +918,6 @@ for (allele1 in 1:85) {
 }
 
 ## Venn diagram studying overlap between diplotype calls by different callers
-
-setwd("C:/Users/lynnh/OneDrive/Bureaublad/2nd Master Stat/Master Thesis/WP5")
 
 for (coverage in c("10x", "30x", "60x")) {
   
@@ -1047,7 +1021,6 @@ bar_pypgx_correct_30x_cyp2c19
 #### Barplot indicating how often each CYP2C19 star allele was correctly called by PyPGx at 30x coverage ####
 
 # Read in data
-setwd("C:/Users/lynnh/OneDrive/Bureaublad/2nd Master Stat/Master Thesis/WP5")
 pypgx_cyp2c19_alleles_30x <- read.table("PyPGx_correct_CYP2C19_alleles_30x_freq.txt",
                                        sep = "\t", header = TRUE)
 pypgx_cyp2c19_alleles_30x <- pypgx_cyp2c19_alleles_30x %>% arrange(Allele)
@@ -1166,7 +1139,6 @@ bar_aldy_correct_30x_cyp2c19
 #### Barplot indicating how often each CYP2C19 star allele was correctly called by Aldy at 30x coverage ####
 
 # Read in data
-setwd("C:/Users/lynnh/OneDrive/Bureaublad/2nd Master Stat/Master Thesis/WP5")
 aldy_cyp2c19_alleles_30x <- read.table("Aldy_correct_CYP2C19_alleles_30x_freq.txt",
                                         sep = "\t", header = TRUE)
 aldy_cyp2c19_alleles_30x <- aldy_cyp2c19_alleles_30x %>% arrange(Allele)
@@ -1285,7 +1257,6 @@ bar_stellarpgx_correct_30x_cyp2c19
 #### Barplot indicating how often each CYP2C19 star allele was correctly called by StellarPGx at 30x coverage ####
 
 # Read in data
-setwd("C:/Users/lynnh/OneDrive/Bureaublad/2nd Master Stat/Master Thesis/WP5")
 stellarpgx_cyp2c19_alleles_30x <- read.table("StellarPGx_correct_CYP2C19_alleles_30x_freq.txt",
                                        sep = "\t", header = TRUE)
 
@@ -1407,8 +1378,6 @@ ggarrange(bar_pypgx_cyp2c19_alleles_30x_2,
 ###-- Venn diagrams --###
 
 ## Venn diagram studying overlap between CYP2C19 diplotype calls by different callers
-
-setwd("C:/Users/lynnh/OneDrive/Bureaublad/2nd Master Stat/Master Thesis/WP5")
 
 for (correctness in c("0%", "50%", "100%")) {
     
@@ -1534,7 +1503,7 @@ stellarpgx_cyp2c19_correct/666
 ###-- MOST IMPORTANT ALLELES --###
 ###----------------------------###
 
-setwd("C:/Users/lynnh/OneDrive/Bureaublad/2nd Master Stat/Master Thesis/WP5/Venn_diagram_data")
+setwd("Venn_diagram_data")
 
 # For CYP2C9: *1, *2, *3, *5, *6, *8, *11
 correct_cyp2c9_10x_pypgx <- readLines("PyPGx_CYP2C9_10x_100%.txt")
