@@ -10,12 +10,6 @@ library(tidyverse)
 library(ggplot2)
 library(ggpubr)
 
-## Preliminaries ##
-
-path_to_folder = paste0("C:/Users/lynnh/OneDrive/Bureaublad",
-                        "/2nd Master Stat/Master Thesis/WP3/ReSeq variant call results")
-setwd(path_to_folder)
-
 ##-------------------------------------------------------------------------##
 ##---- CYP2C9 -------------------------------------------------------------##
 ##-------------------------------------------------------------------------##
@@ -83,6 +77,14 @@ all_cyp2c9_qscores %>% group_by(Type, Coverage) %>%
 sim_stats_cyp2c9 %>% group_by(coverage) %>% 
   summarize("error_Q_gt_allele_Q" = sum(max_qual_errors > min_qual_allelic)) %>%
   mutate("error_Q_gt_allele_Q_percent" = error_Q_gt_allele_Q/85*100)
+
+# Average percentage of non-allelic variants that were introduced as systematic errors
+sim_stats_cyp2c9 <- sim_stats_cyp2c9 %>% 
+  mutate("sys_errors" = as.numeric(substr(systematic_errors,1,nchar(systematic_errors)-1)))
+  
+sim_stats_cyp2c9 %>% group_by(coverage) %>%
+  summarize("average_sys_errors" = mean(sys_errors),
+            "sd_sys_errors" = sd(sys_errors))
 
 ## Make plots ##
 
